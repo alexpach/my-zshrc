@@ -15,6 +15,12 @@ export HOMEBREW_NO_ENV_HINTS=1
 # fzf fuzzy search
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+# aliases
+[ -f ~/.my-aliases ] && source ~/.my-aliases
+
+# private config (managed by chezmoi, not in git)
+[ -f ~/.my-private ] && source ~/.my-private
+
 # Node Version Manager - lazy load
 export NVM_DIR="$HOME/.nvm"
 

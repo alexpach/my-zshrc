@@ -17,7 +17,7 @@ fi
 echo "ok: Prezto found at ~/src/prezto"
 
 # Link dotfiles
-FILES=(zshrc zprofile zpreztorc zshenv zlogin zlogout)
+FILES=(zshrc zprofile zpreztorc zshenv zlogin zlogout my-aliases)
 
 for f in "${FILES[@]}"; do
   src="$REPO_DIR/$f"
@@ -37,3 +37,14 @@ for f in "${FILES[@]}"; do
     ln -s "$src" "$dst"
   fi
 done
+
+# Apply private config via chezmoi
+if command -v chezmoi &>/dev/null; then
+  echo "Applying private config via chezmoi..."
+  chezmoi apply
+else
+  echo "chezmoi not installed — skipping private config"
+  echo "  Install:  brew install chezmoi"
+  echo "  Init:     chezmoi init"
+  echo "  Add file: chezmoi add ~/.my-private"
+fi

@@ -1,0 +1,84 @@
+# GENERAL
+alias newalias='vi ~/.my-aliases && source ~/.my-aliases'
+alias newssh='vi ~/.ssh/config'
+
+alias ls='ls --color=auto -Fv'
+alias l='ls -1'
+alias ll='ls -hl'
+alias la='ls -a'
+alias lla='ls -hla'
+alias lt='ls -altr'
+alias lss='ls -ms1SF'
+
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+alias gh='history|grep'
+alias psg='ps aux | grep -v grep | grep -i -e VSZ -e'
+alias psc='ps xawf -eo pid,user,cgroup,args'
+
+alias open-ports='netstat -tulpn'
+
+# GIT
+alias gs="git-status"
+alias gd="git-diff"
+alias ga="git-add"
+alias gb="git-branch"
+alias gc="git-commit"
+alias gca="git-commit -v -a"
+alias gcam="git-commit --amend -v"
+alias gl="git-log"
+alias gll="git-log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+
+# MISC
+alias iotopp='sudo iotop -oPa'
+
+# CLEAN UP
+alias mac-cleanup='rm -rf ~/Library/Caches/* ~/Library/Logs/* ~/Library/Application\ Support/*/Cache* ~/Library/Application\ Support/*/Logs*'
+
+# DOCKER
+alias dps="docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' | sed -e 's/0.0.0.0://g' -e 's/::://g'"
+alias dps-1='docker ps | sed -e "s/^[a-z0-9].* //" -e "/CONTAINER ID/d" | sort -n'
+alias dexec='docker exec -it'
+alias ddf='docker system df'
+alias dcup='docker-compose up -d'
+alias dcstop='docker-compose stop && docker ps'
+alias dlogs-hive='cd  ~/hive_scripts/docker-config && docker-compose logs -tf --tail="50" '
+
+# Test port 80 via docker
+alias nginx-test='docker run --name nginx-test --rm -p 80:80 nginx'
+
+# Check a port
+alias port='sudo lsof -i -P -n | grep'
+
+# NETWORK STUFF
+alias speedtest-cli='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -'
+alias myip='dig +short -4 myip.opendns.com A @resolver1.opendns.com'
+alias myip6='dig +short -6 myip.opendns.com AAAA @resolver1.opendns.com'
+
+#alias menureset='killall -KILL SystemUIServer'
+#alias ql='qlmanage -p 2>/dev/null'
+
+alias lzd='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v ~/tmp/lazydocker/config:/.config/jesseduffield/lazydocker lazyteam/lazydocker'
+alias dozzle='echo "Open http://localhost:8080" && docker run --rm --name dozzle -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock amir20/dozzle:latest'
+
+# BASHLY
+alias bashly='docker run --rm -it --volume "$PWD:/app" dannyben/bashly'
+
+# SSH
+alias ssh-add-my='ssh-add --apple-use-keychain ~/.ssh/id_ed25519_alex'
+alias ssh-copy-my='ssh-copy-id -i ~/.ssh/id_ed25519_alex'
+
+alias kill-google-drive='pkill -9 -l "Google Drive"'
+
+alias snips="ssh snips.sh"
+
+# Functions
+quit () { for app in $*; do
+        osascript -e 'quit app "'$app'"'
+    done }
+
+# backup
+bu() { cp $@ $@.backup-`date +%Y-%m-%d`; }
+

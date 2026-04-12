@@ -70,6 +70,12 @@ add-zsh-hook preexec _title_preexec
 _title_precmd()  { print -Pn '\e]0;%n@%m: %~\a' }
 _title_preexec() { print -n "\e]0;${1}\a" }
 
+# aliases
+[ -f ~/.my-aliases ] && source ~/.my-aliases
+
+# private config (managed by chezmoi, not in git)
+[ -f ~/.my-private ] && source ~/.my-private
+
 # zoxide (cd replacement)
 (( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
 
