@@ -2,7 +2,7 @@
 alias newalias='vi ~/.my-aliases && source ~/.my-aliases'
 alias newssh='vi ~/.ssh/config'
 
-alias ls='ls --color=auto -Fv'
+# base `ls` alias (colors, -Fv) is set per-OS in zshrc
 alias l='ls -1'
 alias ll='ls -hl'
 alias la='ls -a'
@@ -14,28 +14,37 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-alias gh='history|grep'
+alias hgrep='history|grep'
 alias psg='ps aux | grep -v grep | grep -i -e VSZ -e'
 alias psc='ps xawf -eo pid,user,cgroup,args'
 
 alias open-ports='netstat -tulpn'
 
 # GIT
-alias gs="git-status"
-alias gd="git-diff"
-alias ga="git-add"
-alias gb="git-branch"
-alias gc="git-commit"
-alias gca="git-commit -v -a"
-alias gcam="git-commit --amend -v"
-alias gl="git-log"
-alias gll="git-log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+alias gs="git status"
+alias gd="git diff"
+alias ga="git add"
+alias gb="git branch"
+alias gc="git commit"
+alias gca="git commit -v -a"
+alias gcam="git commit --amend -v"
+alias gl="git log"
+alias gll="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 
 # MISC
 alias iotopp='sudo iotop -oPa'
 
-# CLEAN UP
-alias mac-cleanup='rm -rf ~/Library/Caches/* ~/Library/Logs/* ~/Library/Application\ Support/*/Cache* ~/Library/Application\ Support/*/Logs*'
+# CLEAN UP (asks first; only Caches and Logs)
+mac-cleanup() {
+  print -n "Delete contents of ~/Library/Caches and ~/Library/Logs? [y/N] "
+  if read -q; then
+    print
+    rm -rf ~/Library/Caches/* ~/Library/Logs/*
+  else
+    print
+    print "aborted"
+  fi
+}
 
 # DOCKER
 alias dps="docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' | sed -e 's/0.0.0.0://g' -e 's/::://g'"

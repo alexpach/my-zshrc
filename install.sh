@@ -3,21 +3,8 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Check Prezto
-if [[ ! -f "$HOME/src/prezto/init.zsh" ]]; then
-  echo "Prezto not found at ~/src/prezto"
-  printf "Clone it now? [y/N] " && read yn
-  if [[ "$yn" =~ ^[Yy]$ ]]; then
-    git clone --recursive https://github.com/sorin-ionescu/prezto.git "$HOME/src/prezto"
-  else
-    echo "Skipping. Use zshrc-portable for a standalone config."
-    exit 1
-  fi
-fi
-echo "ok: Prezto found at ~/src/prezto"
-
 # Link dotfiles
-FILES=(zshrc zprofile zpreztorc zshenv zlogin zlogout my-aliases)
+FILES=(zshrc my-aliases)
 
 for f in "${FILES[@]}"; do
   src="$REPO_DIR/$f"
@@ -29,12 +16,22 @@ for f in "${FILES[@]}"; do
     echo "relinking: $dst"
     ln -sf "$src" "$dst"
   elif [[ -e "$dst" ]]; then
-    echo "backing up: $dst -> ${dst}.bak"
-    mv "$dst" "${dst}.bak"
+    bak="${dst}.bak.$(date +%Y%m%d%H%M%S)"
+    echo "backing up: $dst -> $bak"
+    mv "$dst" "$bak"
     ln -s "$src" "$dst"
   else
     echo "linking: $dst"
     ln -s "$src" "$dst"
+  fi
+done
+
+# Remove symlinks left over from the old Prezto-based setup
+for f in zprofile zpreztorc zshenv zlogin zlogout; do
+  dst="$HOME/.$f"
+  if [[ -L "$dst" && "$(readlink "$dst")" == "$REPO_DIR/$f" ]]; then
+    echo "removing stale link: $dst"
+    rm "$dst"
   fi
 done
 
