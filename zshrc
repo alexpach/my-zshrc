@@ -160,10 +160,32 @@ PROMPT='$(_zshlex_left)$(_zshlex_right)'$'\n'' ❯ '
 SPROMPT='zsh: correct %F{red}%R%f to %F{green}%r%f [nyae]? '
 
 # Terminal title
+#   idle            -> user@host: cwd
+#   running a cmd   -> the command line
+#   running codex   -> "[codex] <folder>"  (codex sets no title of its own, so
+#                      this sticks and stays identifiable in the iTerm tab list)
+# claude sets its own "✳ <name>" title and overwrites anything we emit; it's
+# fed the folder via the claude() wrapper below (--name), giving "✳ <folder>".
+# Add other no-title TUIs to the case as needed.
+_title_set() { print -rn -- $'\e]0;'"$1"$'\a' }
 _title_precmd()  { print -Pn '\e]0;%n@%m: %~\a' }
-_title_preexec() { print -n "\e]0;${(V)1}\a" }
+_title_preexec() {
+  local cmd="${(V)1}" first="${${(V)1}%%[[:space:]]*}"
+  case "${first:t}" in
+    codex) _title_set "[codex] ${PWD:t}" ;;
+    *)     _title_set "$cmd" ;;
+  esac
+}
 add-zsh-hook precmd  _title_precmd
 add-zsh-hook preexec _title_preexec
+
+# claude-code: name the session after its project folder so the tab reads
+# "✳ <folder>". Skip if you pass your own --name. Want literal "[claude] …"
+# instead? change the injected value to "[claude] ${PWD:t}" (claude keeps the ✳).
+claude() {
+  if [[ "$*" == *--name* ]]; then command claude "$@"
+  else command claude --name "${PWD:t}" "$@"; fi
+}
 
 # aliases
 [ -f ~/.my-aliases ] && source ~/.my-aliases
@@ -205,6 +227,17 @@ _venv_auto   # run once for the directory the shell starts in
 
 # NVM - lazy load
 export NVM_DIR="$HOME/.nvm"
+
+# Put the newest installed node's bin on PATH up front, so globally-installed
+# CLIs (npm i -g …) resolve in a fresh shell without sourcing nvm.sh. Once nvm
+# loads (or after `nvm use`), it prepends the active version ahead of this.
+# ponytail: tracks newest installed, not the `default` alias (which may be
+# lts/*); switch to honoring the alias only if you pin default to an older node.
+() {
+  local nodebin=( $NVM_DIR/versions/node/*/bin(Nn[-1]) )
+  (( $#nodebin )) && path=( $nodebin $path )
+}
+
 _load_nvm() {
   unset -f nvm node npm npx _load_nvm
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"

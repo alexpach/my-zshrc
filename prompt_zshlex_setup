@@ -1,0 +1,161 @@
+#
+# zshlex — segmented powerline-style prompt (derived from paradox).
+# Requires a Nerd Font for the pill caps, separators, and icons.
+#
+# Original authors:
+#   Isaac Wolkerstorfer <i@agnoster.net>
+#   Jeff Sandberg <paradox460@gmail.com>
+#   Sorin Ionescu <sorin.ionescu@gmail.com>
+#   Patrick Bos <egpbos@gmail.com>
+#
+
+pmodload 'helper'
+
+_prompt_zshlex_start_time=$SECONDS
+
+prompt_zshlex_print_elapsed_time() {
+  # Silenced: no elapsed-time line after commands.
+  :
+}
+
+# Strip ANSI CSI escape sequences so ${#...} reflects visible width.
+# (e) flag expands parameters/conditionals; (%) flag expands prompt escapes.
+_prompt_zshlex_visible_width() {
+  setopt local_options extended_glob
+  local s="${(e%)1}"                           # param + prompt expansion
+  s="${s//$'\e'\[[0-9;]##[A-Za-z]/}"           # strip CSI escapes
+  s="${s//$'\e'\][0-9]##\;*$'\a'/}"            # strip OSC sequences
+  print -r -- ${#s}
+}
+
+function prompt_zshlex_precmd {
+  setopt LOCAL_OPTIONS
+  unsetopt XTRACE KSH_ARRAYS
+
+  if (( $+functions[git-info] )); then
+    git-info
+  fi
+  if (( $+functions[python-info] )); then
+    python-info
+  fi
+
+  prompt_zshlex_print_elapsed_time
+}
+
+# Build left pill at prompt time, appending git / venv segments when active.
+_zshlex_left() {
+  local out="$_zshlex_lpill_base"
+  if [[ -n "${git_info[ref]}" ]]; then
+    out+=" %F{$_zshlex_sep}${_zshlex_lsep} %F{green}${(e)git_info[ref]}${(e)git_info[status]}"
+  fi
+  if [[ -n "$VIRTUAL_ENV" ]]; then
+    # p10k-style: if basename is a generic venv dir name, use parent instead.
+    local venv_name="${VIRTUAL_ENV:t}"
+    case "$venv_name" in
+      .venv|venv|env|.env) venv_name="${VIRTUAL_ENV:h:t}" ;;
+    esac
+    out+=" %F{$_zshlex_sep}${_zshlex_lsep} %F{yellow}"$''" ${venv_name}"
+  fi
+  out+=" %k%F{$_zshlex_bg}${_zshlex_rcap}%f"
+  print -rn -- "$out"
+}
+
+# Emit padding + right pill, or nothing when terminal is too narrow.
+_zshlex_right() {
+  local left rw pad lw
+  left=$(_zshlex_left)
+  lw=$(_prompt_zshlex_visible_width "$left")
+  rw=$(_prompt_zshlex_visible_width "$_zshlex_rpill")
+  pad=$(( COLUMNS - lw - rw ))
+  (( pad < 2 )) && return
+  printf '%*s' $pad ''
+  print -rn -- "$_zshlex_rpill"
+}
+
+# Backup: SIGWINCH handler forces a prompt redraw in case the shell misses it.
+TRAPWINCH() {
+  zle && zle reset-prompt
+}
+
+function prompt_zshlex_preexec {
+  _prompt_zshlex_start_time="$SECONDS"
+}
+
+function prompt_zshlex_setup {
+  setopt LOCAL_OPTIONS
+  unsetopt XTRACE KSH_ARRAYS
+  prompt_opts=(cr percent sp subst)
+
+  autoload -Uz add-zsh-hook
+  add-zsh-hook preexec prompt_zshlex_preexec
+  add-zsh-hook precmd  prompt_zshlex_precmd
+
+  zstyle ':prezto:module:prompt' managed 'yes'
+
+  # Keymap indicator on the input line.
+  zstyle ':prezto:module:editor:info:completing' format '%B%F{red}...%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary' format '%B%F{blue}❯%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary:overwrite' format '%F{red}♺%f'
+  zstyle ':prezto:module:editor:info:keymap:alternate' format '%B%F{red}❮%f%b'
+
+  # Git info (available for later; not rendered in pills yet).
+  zstyle ':prezto:module:git:info' verbose 'yes'
+  zstyle ':prezto:module:git:info:branch'    format ' %b'
+  zstyle ':prezto:module:git:info:commit'    format '➦ %.7c'
+  zstyle ':prezto:module:git:info:action'    format ' ⁝ %s'
+  zstyle ':prezto:module:git:info:added'     format ' ✚'
+  zstyle ':prezto:module:git:info:ahead'     format ' ⬆'
+  zstyle ':prezto:module:git:info:behind'    format ' ⬇'
+  zstyle ':prezto:module:git:info:deleted'   format ' ✖'
+  zstyle ':prezto:module:git:info:dirty'     format ' ⁝'
+  zstyle ':prezto:module:git:info:modified'  format ' ✱'
+  zstyle ':prezto:module:git:info:position'  format '%p'
+  zstyle ':prezto:module:git:info:renamed'   format ' ➙'
+  zstyle ':prezto:module:git:info:stashed'   format ' S'
+  zstyle ':prezto:module:git:info:unmerged'  format ' ═'
+  zstyle ':prezto:module:git:info:untracked' format ' ?'
+  zstyle ':prezto:module:git:info:keys' format \
+    'ref'    '$(coalesce "%b" "%p" "%c")' \
+    'status' '%s%D%A%B%S%a%d%m%r%U%u'
+
+  zstyle ':prezto:module:python:info:virtualenv' format 'virtualenv:%v'
+
+  # --- Glyphs (Nerd Font powerline + icons). ---
+  local LCAP=$'\ue0b6' RCAP=$'\ue0b4'   # rounded pill caps
+  local LSEP=$'\ue0b1' RSEP=$'\ue0b3'   # thin separators: > <
+  local CLOCK=$'\uf017'                  # clock
+
+  # Host-specific icon. Matched against short hostname (${HOST%%.*}).
+  # First matching pattern wins; add entries as needed.
+  local host_icon
+  case "${HOST%%.*}" in
+    aMac5)   host_icon=$'\ueea7'    ;;  # laptop
+    aMac27)  host_icon=$'\uf015'    ;;  # home
+    hive*)   host_icon=$'\UF0B46'   ;;  # beehive (MDI)
+    *)       host_icon='%m'         ;;  # default: show hostname text
+  esac
+
+  # 256-color palette.
+  local BG=236 SEP=244 FG=252
+
+  # Templates + palette stored globally so _zshlex_left/_zshlex_right can use them.
+  typeset -g _zshlex_lpill_base _zshlex_rpill _zshlex_rcap _zshlex_lsep _zshlex_sep _zshlex_bg
+
+  _zshlex_bg="$BG"
+  _zshlex_sep="$SEP"
+  _zshlex_lsep="$LSEP"
+  _zshlex_rcap="$RCAP"
+
+  # Static head of the left pill (up through pwd). Git/venv appended at runtime.
+  _zshlex_lpill_base="%F{$BG}${LCAP}%K{$BG} %F{blue}${host_icon} %F{$SEP}${LSEP} %F{cyan}%~"
+
+  _zshlex_rpill="%F{$BG}${LCAP}%K{$BG} %(?.%F{green}✓.%F{red}✘) %F{$SEP}${RSEP} %F{$FG}%n@%m %F{$SEP}${RSEP} %F{$FG}%D{%H:%M:%S} ${CLOCK} %k%F{$BG}${RCAP}%f"
+
+  # $(...) expands each redraw so git/venv/resize all reflow.
+  PROMPT='$(_zshlex_left)$(_zshlex_right)'$'\n'' ${editor_info[keymap]} '
+  RPROMPT=''
+  SPROMPT='zsh: correct %F{red}%R%f to %F{green}%r%f [nyae]? '
+}
+
+prompt_zshlex_setup "$@"
+# vim: ft=zsh
