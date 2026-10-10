@@ -23,14 +23,28 @@ Or just copy the one file to any machine:
 cp zshrc ~/.zshrc
 ```
 
+For a remote host over ssh (backs up an existing `~/.zshrc` to `~/.zshrc.bak`):
+
+```bash
+./install-remote.sh [--with-aliases] [user@]host
+```
+
 ## What's inside
 
 - PATH setup (`~/bin`, `~/.local/bin`, Homebrew, etc. — missing dirs skipped)
-- Sensible history, directory, and completion options
+- Per-window history: every shell appends to `~/.zsh_history` immediately,
+  but arrow-up only walks the current window's commands (no live cross-feed
+  between windows; `fc -RI` pulls in other windows' entries on demand)
+- Locale guard: if the effective locale isn't UTF-8 (unset, or never
+  generated on the host), forces `C.UTF-8` for the session and prints how to
+  fix the host permanently (the prompt glyphs need UTF-8)
 - Fast startup: full `compinit` security audit at most once a day
   (`-C` otherwise), completion dump compiled in the background,
   NVM lazy-loaded on first use of `nvm`/`node`/`npm`/`npx`
-- Prompt with user@host, path, git branch (via `vcs_info`), and exit code
+- Powerline-style prompt pill (**Nerd Font required**): host icon,
+  user@host, path, git branch and status (via `vcs_info`), venv
+- Transient prompt: accepted lines repaint as plain
+  `user@host:~/dir ❯ cmd`, so copying from scrollback never picks up glyphs
 - Emacs key bindings with up/down prefix history search
 - Terminal title updates (current dir / running command)
 - OS-aware `ls` colors (BSD `CLICOLOR` on macOS, `--color=auto` elsewhere)

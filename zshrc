@@ -22,6 +22,23 @@ path=(
 [[ -z "$VISUAL" ]]   && export VISUAL='vim'
 [[ -z "$PAGER" ]]    && export PAGER='less'
 [[ -z "$LANG" ]]     && export LANG='en_US.UTF-8'
+# Prompt glyphs ($'\uXXXX') die with "character not in range" unless the
+# *effective* locale is UTF-8; LANG may be unset, or set to a locale this box
+# never generated. `locale charmap` reports what the libc actually resolved.
+() {
+  [[ ${(U)$(locale charmap 2>/dev/null)} == *UTF*8* ]] && return
+  local l
+  for l in C.UTF-8 en_US.UTF-8; do
+    if [[ ${(U)$(LC_ALL=$l locale charmap 2>/dev/null)} == *UTF*8* ]]; then
+      export LC_ALL=$l LANG=$l
+      print -ru2 "zshrc: locale was not UTF-8; using $l for this session."
+      print -ru2 "zshrc: fix this host (Debian/Ubuntu): sudo locale-gen en_US.UTF-8 && sudo update-locale LANG=en_US.UTF-8, then re-login."
+      return
+    fi
+  done
+  print -ru2 "zshrc: no UTF-8 locale available; prompt glyphs will be broken."
+  print -ru2 "zshrc: fix this host: install locales (Debian/Ubuntu: sudo apt-get install locales && sudo locale-gen en_US.UTF-8), then re-login."
+}
 [[ -z "$LESS" ]]     && export LESS='-g -i -M -R -S -w -X -z-4'
 [[ "$OSTYPE" == darwin* && -z "$BROWSER" ]] && export BROWSER='open'
 export HOMEBREW_NO_ENV_HINTS=1
@@ -42,7 +59,9 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 HISTFILE="$HOME/.zsh_history"
 HISTSIZE=10000
 SAVEHIST=10000
-setopt BANG_HIST EXTENDED_HISTORY SHARE_HISTORY
+# INC_APPEND_HISTORY_TIME (not SHARE_HISTORY): every window writes to the file
+# right away, but arrow-up only walks this window's own commands.
+setopt BANG_HIST EXTENDED_HISTORY INC_APPEND_HISTORY_TIME
 setopt HIST_EXPIRE_DUPS_FIRST HIST_IGNORE_DUPS HIST_IGNORE_ALL_DUPS
 setopt HIST_FIND_NO_DUPS HIST_IGNORE_SPACE HIST_SAVE_NO_DUPS HIST_VERIFY
 
@@ -107,20 +126,9 @@ zstyle ':vcs_info:git*+set-message:*' hooks untracked
   [[ -n $(git ls-files --others --exclude-standard 2>/dev/null | head -1) ]] && hook_com[unstaged]+=' %F{cyan}?'
 }
 
-# Strip ANSI/OSC escapes so ${#...} reflects on-screen width (for right-align).
-_zshlex_visible_width() {
-  setopt local_options extended_glob
-  local s="${(e%)1}"
-  s="${s//$'\e'\[[0-9;]##[A-Za-z]/}"
-  s="${s//$'\e'\][0-9]##\;*$'\a'/}"
-  print -r -- ${#s}
-}
-
 # Glyphs (Nerd Font).
 _zshlex_lcap=$'\ue0b6'; _zshlex_rcap=$'\ue0b4'   # rounded pill caps
 _zshlex_lsep=$'\ue0b1'                            # thin separator >
-_zshlex_rsep=$'\ue0b3'                            # thin separator <
-_zshlex_clock=$'\uf017'                          # clock
 _zshlex_py=$'\ue73c'                                # python
 _zshlex_bg=236; _zshlex_sep=244; _zshlex_fg=252   # 256-color palette
 
@@ -134,7 +142,7 @@ esac
 
 # Left pill, rebuilt each render so git/venv/resize reflow.
 _zshlex_left() {
-  local out="%F{$_zshlex_bg}${_zshlex_lcap}%K{$_zshlex_bg} %F{blue}${_zshlex_host} %F{$_zshlex_sep}${_zshlex_lsep} %F{cyan}%~"
+  local out="%F{$_zshlex_bg}${_zshlex_lcap}%K{$_zshlex_bg} %F{blue}${_zshlex_host} %F{$_zshlex_sep}${_zshlex_lsep} %F{$_zshlex_fg}%n@%m %F{$_zshlex_sep}${_zshlex_lsep} %F{cyan}%~"
   [[ -n "$vcs_info_msg_0_" ]] && out+=" %F{$_zshlex_sep}${_zshlex_lsep} %F{green}${vcs_info_msg_0_}"
   if [[ -n "$VIRTUAL_ENV" ]]; then
     local venv="${VIRTUAL_ENV:t}"
@@ -145,18 +153,20 @@ _zshlex_left() {
   print -rn -- "$out"
 }
 
-# Right pill, right-aligned; hidden when the line is too narrow.
-_zshlex_right() {
-  local rpill="%F{$_zshlex_bg}${_zshlex_lcap}%K{$_zshlex_bg} %(?.%F{green}✓.%F{red}✘) %F{$_zshlex_sep}${_zshlex_rsep} %F{$_zshlex_fg}%n@%m %F{$_zshlex_sep}${_zshlex_rsep} %F{$_zshlex_fg}%D{%H:%M:%S} ${_zshlex_clock} %k%F{$_zshlex_bg}${_zshlex_rcap}%f"
-  local pad=$(( COLUMNS - $(_zshlex_visible_width "$(_zshlex_left)") - $(_zshlex_visible_width "$rpill") ))
-  (( pad < 2 )) && return
-  printf '%*s' $pad ''
-  print -rn -- "$rpill"
-}
-
 add-zsh-hook precmd vcs_info
-TRAPWINCH() { zle && zle reset-prompt }   # force redraw on resize
-PROMPT='$(_zshlex_left)$(_zshlex_right)'$'\n'' ❯ '
+PROMPT='$(_zshlex_left)'$'\n'' ❯ '
+
+# Transient prompt: on accept, repaint the line as plain text so scrollback
+# (and anything copied from it) reads alex@host:~/dir ❯ cmd — no glyphs.
+# Ctrl-C'd lines skip accept-line and keep the pill; cosmetic, ignore.
+_zshlex_accept() {
+  PROMPT='%F{$_zshlex_fg}%n@%m%f:%F{cyan}%~%f ❯ '
+  zle reset-prompt
+  zle .accept-line
+}
+zle -N accept-line _zshlex_accept
+_zshlex_restore() { PROMPT='$(_zshlex_left)'$'\n'' ❯ ' }
+add-zsh-hook precmd _zshlex_restore
 SPROMPT='zsh: correct %F{red}%R%f to %F{green}%r%f [nyae]? '
 
 # Terminal title
@@ -233,10 +243,8 @@ export NVM_DIR="$HOME/.nvm"
 # loads (or after `nvm use`), it prepends the active version ahead of this.
 # ponytail: tracks newest installed, not the `default` alias (which may be
 # lts/*); switch to honoring the alias only if you pin default to an older node.
-() {
-  local nodebin=( $NVM_DIR/versions/node/*/bin(Nn[-1]) )
-  (( $#nodebin )) && path=( $nodebin $path )
-}
+# (Nn[-1]) yields nothing when no node is installed, so the prepend is a no-op.
+path=( $NVM_DIR/versions/node/*/bin(Nn[-1]) $path )
 
 _load_nvm() {
   unset -f nvm node npm npx _load_nvm
@@ -263,3 +271,6 @@ _farewell() {
   print -- "$sayings[RANDOM % $#sayings + 1]" >&2
 }
 add-zsh-hook zshexit _farewell
+
+# Indigo HQ managed toolchain
+export PATH="$HOME/Library/Application Support/Indigo HQ/toolchain/node/bin:$HOME/Library/Application Support/Indigo HQ/toolchain/npm-global/bin:$HOME/Library/Application Support/Indigo HQ/toolchain/git-shim:$HOME/.local/bin:$PATH"

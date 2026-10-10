@@ -15,7 +15,6 @@ alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
 alias hgrep='history|grep'
-alias psg='ps aux | grep -v grep | grep -i -e VSZ -e'
 alias psc='ps xawf -eo pid,user,cgroup,args'
 
 alias open-ports='netstat -tulpn'
@@ -91,3 +90,8 @@ quit () { for app in $*; do
 # backup
 bu() { cp $@ $@.backup-`date +%Y-%m-%d`; }
 
+# ghostty setup
+ghostty-setup() {
+  infocmp -x xterm-ghostty | ssh "$@" -- tic -x - \
+    2> >(sed '/older tic versions may treat the description field as an alias/d' >&2)
+}

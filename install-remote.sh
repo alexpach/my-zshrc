@@ -1,50 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Install zshrc to ~/.zshrc on a remote host over SSH. Existing ~/.zshrc is
+# backed up to ~/.zshrc.bak (unless it's already a symlink). With --with-aliases,
+# also copy my-aliases to ~/.my-aliases.
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-usage() {
-  cat <<EOF
-Usage: $0 [--with-aliases] [user@]host
-
-Installs zshrc-portable to ~/.zshrc on a remote host via SSH.
-An existing ~/.zshrc is backed up to ~/.zshrc.bak.
-
-Options:
-  --with-aliases  Also install my-aliases to ~/.my-aliases
-EOF
-  exit 1
-}
-
-WITH_ALIASES=0
-HOST=""
-
+with_aliases=0
+host=""
 for arg in "$@"; do
   case "$arg" in
-    --with-aliases) WITH_ALIASES=1 ;;
-    -*)             echo "Unknown option: $arg"; usage ;;
-    *)              HOST="$arg" ;;
+    --with-aliases) with_aliases=1 ;;
+    -*) echo "unknown option: $arg" >&2; exit 1 ;;
+    *)  host="$arg" ;;
   esac
 done
 
-[[ -z "$HOST" ]] && usage
-
-echo "Installing portable zshrc to ${HOST}..."
-
-# Back up existing ~/.zshrc on remote (skip if it's already a symlink)
-ssh "$HOST" '
-  if [[ -f ~/.zshrc && ! -L ~/.zshrc ]]; then
-    cp ~/.zshrc ~/.zshrc.bak
-    echo "backed up: ~/.zshrc -> ~/.zshrc.bak"
-  fi
-'
-
-scp "$REPO_DIR/zshrc-portable" "${HOST}:~/.zshrc"
-echo "installed: ~/.zshrc"
-
-if [[ $WITH_ALIASES -eq 1 ]]; then
-  scp "$REPO_DIR/my-aliases" "${HOST}:~/.my-aliases"
-  echo "installed: ~/.my-aliases"
+if [[ -z "$host" ]]; then
+  echo "usage: $0 [--with-aliases] [user@]host" >&2
+  exit 1
 fi
 
-echo "Done. Run 'source ~/.zshrc' on ${HOST} to apply."
+ssh "$host" '[[ -f ~/.zshrc && ! -L ~/.zshrc ]] && cp ~/.zshrc ~/.zshrc.bak && echo "backed up ~/.zshrc -> ~/.zshrc.bak"' || true
+scp "$REPO_DIR/zshrc" "$host:~/.zshrc"
+(( with_aliases )) && scp "$REPO_DIR/my-aliases" "$host:~/.my-aliases"
+
+echo "done — run 'source ~/.zshrc' on $host to apply"
