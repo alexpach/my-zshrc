@@ -123,7 +123,7 @@ zstyle ':vcs_info:git:*' actionformats '%b %F{red}⁝ %a%u%c'
 # append " ?" when there are untracked files (vcs_info has no native flag for it).
 zstyle ':vcs_info:git*+set-message:*' hooks untracked
 +vi-untracked() {
-  [[ -n $(git ls-files --others --exclude-standard 2>/dev/null | head -1) ]] && hook_com[unstaged]+=' %F{cyan}?'
+  [[ -n $(git ls-files --others --exclude-standard --directory 2>/dev/null | head -1) ]] && hook_com[unstaged]+=' %F{cyan}?'
 }
 
 # Glyphs (Nerd Font).
