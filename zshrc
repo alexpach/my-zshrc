@@ -72,6 +72,7 @@ setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
 # otherwise trust the existing dump (-C); compile the dump in the background.
 () {
   setopt LOCAL_OPTIONS EXTENDED_GLOB
+  fpath=($HOME/.docker/completions(N) $fpath)   # Docker Desktop CLI completions
   autoload -Uz compinit
   local dump="${ZDOTDIR:-$HOME}/.zcompdump"
   if [[ -n $dump(#qN.mh-24) ]]; then
