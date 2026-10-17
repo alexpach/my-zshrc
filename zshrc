@@ -138,7 +138,7 @@ case "${HOST%%.*}" in
   aMac5)      _zshlex_host=$'\ueea7' ;;   # laptop
   aMac1)      _zshlex_host=$'\uef89' ;;   # swiss laptop
   aMac27)     _zshlex_host=$'\uf015' ;;   # home
-  hive-alex)  _zshlex_host=$'\ude9e' ;;   # host
+  hive-alex)  _zshlex_host=$'\uf015' ;;   # host
   hive*)      _zshlex_host=$'\uf10ce' ;;  # beehive
   *)          _zshlex_host='%m' ;;        # fallback: hostname text  (f08c0)
 esac
