@@ -135,10 +135,12 @@ _zshlex_bg=236; _zshlex_sep=244; _zshlex_fg=252   # 256-color palette
 
 # Host-specific icon, matched on short hostname. Add cases as needed.
 case "${HOST%%.*}" in
-  aMac5)  _zshlex_host=$'\ueea7' ;;   # laptop
-  aMac27) _zshlex_host=$'\uf015' ;;   # home
-  hive*)  _zshlex_host=$'\UF0B46' ;;  # beehive
-  *)      _zshlex_host='%m' ;;        # fallback: hostname text
+  aMac5)      _zshlex_host=$'\ueea7' ;;   # laptop
+  aMac1)      _zshlex_host=$'\uef89' ;;   # swiss laptop
+  aMac27)     _zshlex_host=$'\uf015' ;;   # home
+  hive-alex)  _zshlex_host=$'\udb85\ude9e' ;;  # beehive
+  hive*)      _zshlex_host=$'\uf10ce' ;;  # beehive
+  *)          _zshlex_host='%m' ;;        # fallback: hostname text  (f08c0)
 esac
 
 # Left pill, rebuilt each render so git/venv/resize reflow.
