@@ -40,7 +40,7 @@ For a remote host over ssh (backs up an existing `~/.zshrc` to `~/.zshrc.bak`):
   fix the host permanently (the prompt glyphs need UTF-8)
 - Fast startup: full `compinit` security audit at most once a day
   (`-C` otherwise), completion dump compiled in the background,
-  NVM lazy-loaded on first use of `nvm`/`node`/`npm`/`npx`
+  NVM lazy-loaded on first `nvm`; `node`/`npm`/`npx` run straight from the newest installed version on PATH
 - Powerline-style prompt pill (**Nerd Font required**): host icon,
   user@host, path, git branch and status (via `vcs_info`), venv
 - Transient prompt: accepted lines repaint as plain

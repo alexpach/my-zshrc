@@ -79,7 +79,7 @@ chk "gs"   'alias gs >/dev/null'
 
 print "\n-- functions --"
 for f in _zshlex_left _zshlex_accept _zshlex_restore claude \
-         nvm node npm npx _venv_auto _title_preexec _farewell; do
+         nvm _venv_auto _title_preexec _farewell; do
   chk "function $f" "(( \$+functions[$f] ))"
 done
 chk "trash NOT a function (binary wins)" '(( ! $+functions[trash] ))'

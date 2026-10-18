@@ -249,15 +249,14 @@ export NVM_DIR="$HOME/.nvm"
 # (Nn[-1]) yields nothing when no node is installed, so the prepend is a no-op.
 path=( $NVM_DIR/versions/node/*/bin(Nn[-1]) $path )
 
-_load_nvm() {
-  unset -f nvm node npm npx _load_nvm
+# node/npm/npx come from the PATH entry above, so only nvm itself is stubbed.
+# (No _-prefixed helper: Claude Code's shell snapshot drops _* functions.)
+nvm() {
+  unset -f nvm
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
   [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  nvm "$@"
 }
-nvm()  { _load_nvm; nvm  "$@"; }
-node() { _load_nvm; node "$@"; }
-npm()  { _load_nvm; npm  "$@"; }
-npx()  { _load_nvm; npx  "$@"; }
 
 # Greeting (login shells only)
 if [[ -o LOGIN && -o INTERACTIVE && -t 2 ]] && (( $+commands[fortune] )); then
