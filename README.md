@@ -23,7 +23,7 @@ Or just copy the one file to any machine:
 cp zshrc ~/.zshrc
 ```
 
-For a remote host over ssh (backs up an existing `~/.zshrc` to `~/.zshrc.bak`):
+For a remote host over ssh (backs up an existing `~/.zshrc` to `~/.zshrc.bak.<timestamp>`):
 
 ```bash
 ./install-remote.sh [--with-aliases] [user@]host
@@ -40,6 +40,7 @@ For a remote host over ssh (backs up an existing `~/.zshrc` to `~/.zshrc.bak`):
   fix the host permanently (the prompt glyphs need UTF-8)
 - Fast startup: full `compinit` security audit at most once a day
   (`-C` otherwise), completion dump compiled in the background,
+  Homebrew/Docker/generated completions (tailscale, npm, aws) picked up when present,
   NVM lazy-loaded on first `nvm`; `node`/`npm`/`npx` run straight from the newest installed version on PATH
 - Powerline-style prompt pill (**Nerd Font required**): host icon,
   user@host, path, git branch and status (via `vcs_info`), venv

@@ -72,7 +72,12 @@ setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
 # otherwise trust the existing dump (-C); compile the dump in the background.
 () {
   setopt LOCAL_OPTIONS EXTENDED_GLOB
-  fpath=($HOME/.docker/completions(N) $fpath)   # Docker Desktop CLI completions
+  # Tools without a shipped _file generate one; cache it (trash ~/.zsh/completions to refresh).
+  local gen=$HOME/.zsh/completions
+  [[ -d $gen ]] || mkdir -p $gen
+  (( $+commands[tailscale] )) && [[ ! -s $gen/_tailscale ]] && tailscale completion zsh >$gen/_tailscale
+  (( $+commands[npm] )) && [[ ! -s $gen/npm.zsh ]] && npm completion >$gen/npm.zsh
+  fpath=(/opt/homebrew/share/zsh/site-functions(N) $HOME/.docker/completions(N) $gen $fpath)
   autoload -Uz compinit
   local dump="${ZDOTDIR:-$HOME}/.zcompdump"
   if [[ -n $dump(#qN.mh-24) ]]; then
@@ -80,6 +85,8 @@ setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
   else
     compinit -d "$dump"
   fi
+  [[ -s $gen/npm.zsh ]] && source $gen/npm.zsh   # npm emits a source-style script, not #compdef
+  (( $+commands[aws_completer] )) && { autoload -Uz bashcompinit && bashcompinit && complete -C aws_completer aws }
   { [[ -s "$dump" && (! -s "$dump.zwc" || "$dump" -nt "$dump.zwc") ]] && zcompile "$dump" } &!
 }
 setopt COMPLETE_IN_WORD ALWAYS_TO_END PATH_DIRS AUTO_MENU
