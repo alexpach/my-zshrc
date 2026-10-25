@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Install zshrc to ~/.zshrc on a remote host over SSH. Existing ~/.zshrc is
-# backed up to ~/.zshrc.bak (unless it's already a symlink). With --with-aliases,
+# backed up to ~/.zshrc.bak.<timestamp> (unless it's already a symlink). With --with-aliases,
 # also copy my-aliases to ~/.my-aliases.
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -21,7 +21,7 @@ if [[ -z "$host" ]]; then
   exit 1
 fi
 
-ssh "$host" '[[ -f ~/.zshrc && ! -L ~/.zshrc ]] && cp ~/.zshrc ~/.zshrc.bak && echo "backed up ~/.zshrc -> ~/.zshrc.bak"' || true
+ssh "$host" 'b=~/.zshrc.bak.$(date +%Y%m%d-%H%M%S); [ -f ~/.zshrc ] && [ ! -L ~/.zshrc ] && cp ~/.zshrc "$b" && echo "backed up ~/.zshrc -> $b"' || true
 scp "$REPO_DIR/zshrc" "$host:~/.zshrc"
 (( with_aliases )) && scp "$REPO_DIR/my-aliases" "$host:~/.my-aliases"
 
