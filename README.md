@@ -48,15 +48,47 @@ For a remote host over ssh (backs up an existing `~/.zshrc` to `~/.zshrc.bak.<ti
   `user@host:~/dir ❯ cmd`, so copying from scrollback never picks up glyphs
 - Emacs key bindings with up/down prefix history search
 - Terminal title updates (current dir / running command)
-- OS-aware `ls` colors (BSD `CLICOLOR` on macOS, `--color=auto` elsewhere)
+- `ls` is [eza](https://github.com/eza-community/eza) when installed: long table,
+  directories first, icons, names with spaces not quoted. Otherwise plain
+  colored `ls` (BSD `CLICOLOR` on macOS, `--color=auto` elsewhere)
+- `COLORTERM=truecolor` restored over ssh when `$TERM` is Ghostty, kitty or
+  a `*-direct` terminal (sshd drops the variable)
 - Optional tools guarded — [zoxide](https://github.com/ajeetdsouza/zoxide),
-  [fzf](https://github.com/junegunn/fzf), [nvm](https://github.com/nvm-sh/nvm),
+  [fzf](https://github.com/junegunn/fzf), [eza](https://github.com/eza-community/eza), [nvm](https://github.com/nvm-sh/nvm),
   and `fortune` are used if present, silently skipped if not
 
 ## Aliases
 
 `my-aliases` (sourced from `~/.my-aliases` if present) holds aliases for git,
 docker, networking, etc. It builds on the base `ls` alias defined in `zshrc`.
+
+Listing files:
+
+| Alias | With eza | Without eza |
+|---|---|---|
+| `l` | names only, grid | names only, one per line |
+| `ls` | long table | short grid |
+| `ll` | long + hidden + group + git status | long |
+| `la` | long + hidden | short + hidden |
+| `lt` | all files by time, newest last | same |
+| `lss` | by size, biggest last | by size, biggest first |
+| `ltree` | two-level tree with git status | not defined |
+
+SSH port forwarding (same port on both ends):
+
+```bash
+fip myserver 3000 8080   # localhost:3000 and :8080 now reach myserver
+lip                      # list active forwards
+dip 3000                 # stop one
+```
+
+Also: `..` / `...` / `....` to go up one, two or three directories.
+
+## bash/
+
+Unmodified copy of [Omarchy](https://omarchy.org)'s default bash config, kept
+for reference. Nothing here is sourced by `zshrc`; useful pieces get ported
+into `zshrc` or `my-aliases`.
 
 ## Private config
 
