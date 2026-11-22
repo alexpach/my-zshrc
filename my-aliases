@@ -2,13 +2,22 @@
 alias newalias='vi ~/.my-aliases && source ~/.my-aliases'
 alias newssh='vi ~/.ssh/config'
 
-# base `ls` alias (colors, -Fv) is set per-OS in zshrc
-alias l='ls -1'
-alias ll='ls -hl'
+# base `ls` alias is set in zshrc: eza (already long format) if installed,
+# else per-OS colored ls. eza's -t/-s/-S/-m mean different things, hence the split.
 alias la='ls -a'
 alias lla='ls -hla'
-alias lt='ls -altr'
-alias lss='ls -ms1SF'
+if command -v eza >/dev/null 2>&1; then
+  alias l='eza --group-directories-first --icons=auto --no-quotes'
+  alias ll='ls -a -g --git'
+  alias lt='ls -a -s modified'
+  alias lss='ls -s size'
+  alias ltree='ls --tree --level=2 --git'
+else
+  alias l='ls -1'
+  alias ll='ls -hl'
+  alias lt='ls -altr'
+  alias lss='ls -ms1SF'
+fi
 
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'

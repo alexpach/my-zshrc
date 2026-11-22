@@ -27,6 +27,6 @@ Note: `add-zsh-hook` is explicitly autoloaded near the top — hooks throughout 
 
 ## Conventions
 
-- The base `ls` alias (colors, `-Fv`) is OS-aware and lives in `zshrc`; `my-aliases` defines derived aliases (`l`, `ll`, `la`, …) on top of it.
+- The base `ls` alias lives in `zshrc`: `eza -lh --group-directories-first --icons=auto --no-quotes` if eza is installed (Omarchy's bash look, minus the quoting of names with spaces), else OS-aware colored `ls -Fv` (`-N` on Linux, again for no quotes). `my-aliases` defines derived aliases on top of it, with an eza branch because eza's `-t`/`-s`/`-S`/`-m` flags differ from ls: `l` names-only grid, `ll` long + hidden + group + git, `lt` by time (newest last), `lss` by size (biggest last), `ltree` two-level tree.
 - Don't alias over common binaries (e.g. `gh` is the GitHub CLI; history-grep is `hgrep`).
 - Private/machine-specific config goes in `~/.my-private` (managed by chezmoi, never committed here).

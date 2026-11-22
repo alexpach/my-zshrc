@@ -106,12 +106,15 @@ bindkey '^[[B' down-line-or-beginning-search # down arrow
 bindkey '^[OA' up-line-or-beginning-search   # up arrow (alt)
 bindkey '^[OB' down-line-or-beginning-search # down arrow (alt)
 
-# ls colors — base alias; my-aliases builds l/ll/la/etc. on top of it
-if [[ "$OSTYPE" == darwin* ]]; then
+# ls — base alias; my-aliases builds l/ll/la/etc. on top of it.
+# eza if installed (same look as Omarchy's bash), else plain colored ls.
+if (( $+commands[eza] )); then
+  alias ls='eza -lh --group-directories-first --icons=auto --no-quotes'
+elif [[ "$OSTYPE" == darwin* ]]; then
   export CLICOLOR=1
   alias ls='ls -Fv'
 else
-  alias ls='ls --color=auto -Fv'
+  alias ls='ls --color=auto -FvN'
 fi
 
 # Prompt: zshlex — segmented powerline prompt, ported from the Prezto theme to
