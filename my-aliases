@@ -26,6 +26,11 @@ alias egrep='egrep --color=auto'
 alias hgrep='history|grep'
 alias psc='ps xawf -eo pid,user,cgroup,args'
 
+# psg - ps with grep that excludes the grep line itself unless grepping for grep
+#psg() { local term=$1; if [[ -n "$term" ]]; then if [[ "$term" == grep ]]; then ps awxww | grep "$term"; else ps awxww | grep "$term" | grep -v 'grep'; fi; else echo "Usage: psg <term>"; fi; }
+
+psg() { command grep -i -- "$1" <<< "$(ps awxww)"; }
+
 alias open-ports='netstat -tulpn'
 
 # GIT
@@ -90,6 +95,7 @@ alias ssh-copy-my='ssh-copy-id -i ~/.ssh/id_ed25519_alex'
 alias kill-google-drive='pkill -9 -l "Google Drive"'
 
 alias snips="ssh snips.sh"
+alias wtf-internet="gping -b 180 -0 --ymax 1000 google.com 4.2.2.2 1.1.1.1"
 
 # Functions
 quit () { for app in $*; do
@@ -104,3 +110,6 @@ ghostty-setup() {
   infocmp -x xterm-ghostty | ssh "$@" -- tic -x - \
     2> >(sed '/older tic versions may treat the description field as an alias/d' >&2)
 }
+
+brain() { uv run -q --project "$HOME/src/sfl-brain/mcp" python3 "$HOME/src/sfl-brain/tools/brain_deploy.py" "$@"; }
+
