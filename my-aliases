@@ -29,7 +29,7 @@ alias psc='ps xawf -eo pid,user,cgroup,args'
 # psg - ps with grep that excludes the grep line itself unless grepping for grep
 #psg() { local term=$1; if [[ -n "$term" ]]; then if [[ "$term" == grep ]]; then ps awxww | grep "$term"; else ps awxww | grep "$term" | grep -v 'grep'; fi; else echo "Usage: psg <term>"; fi; }
 
-psg() { command grep -i -- "$1" <<< "$(ps awxww)"; }
+psg() { command grep --color=auto -i -- "$1" <<< "$(ps awxww)"; }
 
 alias open-ports='netstat -tulpn'
 
@@ -92,6 +92,25 @@ alias bashly='docker run --rm -it --volume "$PWD:/app" dannyben/bashly'
 alias ssh-add-my='ssh-add --apple-use-keychain ~/.ssh/id_ed25519_alex'
 alias ssh-copy-my='ssh-copy-id -i ~/.ssh/id_ed25519_alex'
 
+# SSH port forwards (same port both ends): fip starts, dip stops, lip lists
+fip() {
+  (( $# < 2 )) && echo "Usage: fip <host> <port1> [port2] ..." && return 1
+  local host="$1" port
+  shift
+  for port in "$@"; do
+    ssh -f -N -L "${port}:localhost:${port}" "$host" && echo "Forwarding localhost:$port -> $host:$port"
+  done
+}
+dip() {
+  (( $# == 0 )) && echo "Usage: dip <port1> [port2] ..." && return 1
+  local port
+  for port in "$@"; do
+    pkill -f "ssh.*-L ${port}:localhost:${port}" && echo "Stopped forwarding port $port" || echo "No forwarding on port $port"
+  done
+}
+# ps + grep, not `pgrep -af`: macOS pgrep's -a means "ancestors" and prints bare PIDs
+lip() { ps -axo pid=,args= | command grep -E "[s]sh.*-L [0-9]+:localhost:[0-9]+" || echo "No active forwards"; }
+
 alias kill-google-drive='pkill -9 -l "Google Drive"'
 
 alias snips="ssh snips.sh"
@@ -113,3 +132,7 @@ ghostty-setup() {
 
 brain() { uv run -q --project "$HOME/src/sfl-brain/mcp" python3 "$HOME/src/sfl-brain/tools/brain_deploy.py" "$@"; }
 
+# cd
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'

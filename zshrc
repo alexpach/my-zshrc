@@ -41,6 +41,8 @@ path=(
 }
 [[ -z "$LESS" ]]     && export LESS='-g -i -M -R -S -w -X -z-4'
 [[ "$OSTYPE" == darwin* && -z "$BROWSER" ]] && export BROWSER='open'
+# sshd drops COLORTERM, so restore it when TERM proves a truecolor terminal
+[[ -z "$COLORTERM" && "$TERM" == (xterm-ghostty|xterm-kitty|*-direct) ]] && export COLORTERM=truecolor
 export HOMEBREW_NO_ENV_HINTS=1
 
 # Build flags for keg-only flex/bison (only when present). Both -L paths must be
